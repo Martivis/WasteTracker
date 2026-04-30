@@ -9,4 +9,7 @@ interface FinanceRepository {
     suspend fun addOperation(operation: FinanceOperation)
     suspend fun updateOperation(operation: FinanceOperation)
     suspend fun deleteOperation(id: String)
+    
+    fun getBalance(): Flow<Double>
+    suspend fun refreshData(): Result<Unit>
 }

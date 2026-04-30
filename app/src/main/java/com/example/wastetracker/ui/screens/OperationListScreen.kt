@@ -6,7 +6,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -25,14 +27,29 @@ import java.util.Locale
 fun OperationListScreen(
     viewModel: FinanceViewModel,
     onAddOperation: () -> Unit,
-    onOperationClick: (String) -> Unit
+    onOperationClick: (String) -> Unit,
+    onLogout: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = androidx.compose.runtime.remember { SnackbarHostState() }
+
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearError()
+        }
+    }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Мои Финансы") }
+                title = { Text("Мои Финансы") },
+                actions = {
+                    TextButton(onClick = onLogout) {
+                        Text("Выйти")
+                    }
+                }
             )
         },
         floatingActionButton = {
@@ -41,23 +58,25 @@ fun OperationListScreen(
             }
         }
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .padding(paddingValues)
-                .fillMaxSize()
+        PullToRefreshBox(
+            isRefreshing = uiState.isLoading,
+            onRefresh = { viewModel.refresh() },
+            modifier = Modifier.padding(paddingValues)
         ) {
-            BalanceCard(uiState.balance)
-            
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(uiState.operations) { operation ->
-                    OperationCard(
-                        operation = operation,
-                        onClick = { onOperationClick(operation.id) }
-                    )
+            Column(modifier = Modifier.fillMaxSize()) {
+                BalanceCard(uiState.balance)
+                
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(uiState.operations) { operation ->
+                        OperationCard(
+                            operation = operation,
+                            onClick = { onOperationClick(operation.id) }
+                        )
+                    }
                 }
             }
         }
