@@ -4,8 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.wastetracker.data.model.FinanceOperation
 import com.example.wastetracker.data.repository.FinanceRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 data class FinanceUiState(
     val operations: List<FinanceOperation> = emptyList(),
@@ -14,10 +16,13 @@ data class FinanceUiState(
     val error: String? = null
 )
 
-class FinanceViewModel(private val repository: FinanceRepository) : ViewModel() {
+@HiltViewModel
+class FinanceViewModel @Inject constructor(private val repository: FinanceRepository) : ViewModel() {
 
     private val _isRefreshing = MutableStateFlow(false)
     private val _error = MutableStateFlow<String?>(null)
+    private val _currentOperation = MutableStateFlow<FinanceOperation?>(null)
+    val currentOperation = _currentOperation.asStateFlow()
 
     val uiState: StateFlow<FinanceUiState> = combine(
         repository.getAllOperations(),
@@ -72,8 +77,14 @@ class FinanceViewModel(private val repository: FinanceRepository) : ViewModel() 
         }
     }
     
-    fun getOperation(id: String): FinanceOperation? {
-        return repository.getOperationById(id)
+    fun fetchOperation(id: String) {
+        viewModelScope.launch {
+            _currentOperation.value = repository.getOperationById(id)
+        }
+    }
+
+    fun clearCurrentOperation() {
+        _currentOperation.value = null
     }
     
     fun clearError() {

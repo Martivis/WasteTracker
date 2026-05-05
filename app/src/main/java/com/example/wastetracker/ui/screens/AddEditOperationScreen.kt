@@ -23,15 +23,31 @@ fun AddEditOperationScreen(
     operationId: String? = null,
     onNavigateBack: () -> Unit
 ) {
-    val operation = remember(operationId) {
-        operationId?.let { viewModel.getOperation(it) }
+    val operation by viewModel.currentOperation.collectAsState()
+
+    LaunchedEffect(operationId) {
+        if (operationId != null) {
+            viewModel.fetchOperation(operationId)
+        } else {
+            viewModel.clearCurrentOperation()
+        }
     }
 
-    var amount by remember { mutableStateOf(operation?.amount?.toString() ?: "") }
-    var category by remember { mutableStateOf(operation?.category ?: "") }
-    var type by remember { mutableStateOf(operation?.type ?: OperationType.EXPENSE) }
-    var date by remember { mutableStateOf(operation?.date ?: LocalDate.now()) }
-    var description by remember { mutableStateOf(operation?.description ?: "") }
+    var amount by remember { mutableStateOf("") }
+    var category by remember { mutableStateOf("") }
+    var type by remember { mutableStateOf(OperationType.EXPENSE) }
+    var date by remember { mutableStateOf(LocalDate.now()) }
+    var description by remember { mutableStateOf("") }
+
+    LaunchedEffect(operation) {
+        operation?.let {
+            amount = it.amount.toString()
+            category = it.category
+            type = it.type
+            date = it.date
+            description = it.description ?: ""
+        }
+    }
 
     var showDatePicker by remember { mutableStateOf(false) }
 

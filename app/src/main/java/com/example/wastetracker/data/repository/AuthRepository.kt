@@ -6,8 +6,11 @@ import com.example.wastetracker.data.remote.dto.RegisterRequest
 import com.example.wastetracker.data.remote.dto.TokenResponse
 import com.example.wastetracker.util.TokenManager
 import retrofit2.Response
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class AuthRepository(
+@Singleton
+class AuthRepository @Inject constructor(
     private val api: AuthApiService,
     private val tokenManager: TokenManager
 ) {

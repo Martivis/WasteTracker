@@ -14,7 +14,7 @@ class InMemoryFinanceRepository : FinanceRepository {
         return operations
     }
 
-    override fun getOperationById(id: String): FinanceOperation? {
+    override suspend fun getOperationById(id: String): FinanceOperation? {
         return operations.value.find { it.id == id }
     }
 

@@ -25,10 +25,17 @@ fun OperationDetailScreen(
     onDeleteSuccess: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
-    val operation = remember(operationId) { viewModel.getOperation(operationId) }
+    val operation by viewModel.currentOperation.collectAsState()
 
-    if (operation == null) {
-        onNavigateBack()
+    LaunchedEffect(operationId) {
+        viewModel.fetchOperation(operationId)
+    }
+
+    val op = operation
+    if (op == null) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
+            CircularProgressIndicator()
+        }
         return
     }
 
@@ -42,11 +49,11 @@ fun OperationDetailScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { onEditClick(operation.id) }) {
+                    IconButton(onClick = { onEditClick(op.id) }) {
                         Icon(Icons.Default.Edit, contentDescription = "Edit")
                     }
                     IconButton(onClick = { 
-                        viewModel.deleteOperation(operation.id)
+                        viewModel.deleteOperation(op.id)
                         onDeleteSuccess()
                     }) {
                         Icon(Icons.Default.Delete, contentDescription = "Delete")
@@ -62,16 +69,16 @@ fun OperationDetailScreen(
                 .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            DetailItem(label = "Тип", value = if (operation.type == OperationType.INCOME) "Доход" else "Расход")
+            DetailItem(label = "Тип", value = if (op.type == OperationType.INCOME) "Доход" else "Расход")
             DetailItem(
                 label = "Сумма", 
-                value = String.format(Locale.getDefault(), "%.2f ₽", operation.amount),
-                valueColor = if (operation.type == OperationType.INCOME) Color(0xFF388E3C) else Color(0xFFD32F2F)
+                value = String.format(Locale.getDefault(), "%.2f ₽", op.amount),
+                valueColor = if (op.type == OperationType.INCOME) Color(0xFF388E3C) else Color(0xFFD32F2F)
             )
-            DetailItem(label = "Категория", value = operation.category)
-            DetailItem(label = "Дата", value = operation.date.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")))
+            DetailItem(label = "Категория", value = op.category)
+            DetailItem(label = "Дата", value = op.date.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")))
             
-            operation.description?.let {
+            op.description?.let {
                 DetailItem(label = "Описание", value = it)
             }
         }

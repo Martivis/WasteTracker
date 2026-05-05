@@ -40,7 +40,7 @@ class NetworkFinanceRepository(private val api: OperationsApiService) : FinanceR
         }
     }
 
-    override fun getOperationById(id: String): FinanceOperation? {
+    override suspend fun getOperationById(id: String): FinanceOperation? {
         return _operations.value.find { it.id == id }
     }
 

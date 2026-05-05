@@ -8,46 +8,32 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.wastetracker.data.remote.RetrofitClient
-import com.example.wastetracker.data.repository.AuthRepository
-import com.example.wastetracker.data.repository.NetworkFinanceRepository
 import com.example.wastetracker.ui.screens.*
 import com.example.wastetracker.ui.viewmodel.AuthViewModel
 import com.example.wastetracker.ui.viewmodel.FinanceViewModel
 import com.example.wastetracker.util.TokenManager
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    private lateinit var tokenManager: TokenManager
-    private lateinit var retrofitClient: RetrofitClient
-    private lateinit var authRepository: AuthRepository
-    private lateinit var financeRepository: NetworkFinanceRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        tokenManager = TokenManager(this)
-        retrofitClient = RetrofitClient(tokenManager)
-        authRepository = AuthRepository(retrofitClient.authService, tokenManager)
-        financeRepository = NetworkFinanceRepository(retrofitClient.operationsService)
-
         setContent {
             MaterialTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    val authViewModel: AuthViewModel = viewModel(
-                        factory = ViewModelFactory(authRepository, financeRepository)
-                    )
-                    val financeViewModel: FinanceViewModel = viewModel(
-                        factory = ViewModelFactory(authRepository, financeRepository)
-                    )
+                    val authViewModel: AuthViewModel = hiltViewModel()
+                    val financeViewModel: FinanceViewModel = hiltViewModel()
                     
                     FinanceApp(authViewModel, financeViewModel)
                 }
@@ -128,20 +114,6 @@ fun FinanceApp(authViewModel: AuthViewModel, financeViewModel: FinanceViewModel)
                 operationId = id,
                 onNavigateBack = { navController.popBackStack() }
             )
-        }
-    }
-}
-
-// Simple unified factory
-class ViewModelFactory(
-    private val authRepository: AuthRepository,
-    private val financeRepository: NetworkFinanceRepository
-) : androidx.lifecycle.ViewModelProvider.Factory {
-    override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-        return when {
-            modelClass.isAssignableFrom(AuthViewModel::class.java) -> AuthViewModel(authRepository) as T
-            modelClass.isAssignableFrom(FinanceViewModel::class.java) -> FinanceViewModel(financeRepository) as T
-            else -> throw IllegalArgumentException("Unknown ViewModel class")
         }
     }
 }

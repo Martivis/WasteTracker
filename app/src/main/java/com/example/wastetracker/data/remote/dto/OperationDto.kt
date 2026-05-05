@@ -3,6 +3,7 @@ package com.example.wastetracker.data.remote.dto
 import com.example.wastetracker.data.model.OperationType
 
 data class OperationRequest(
+    val id: String? = null,
     val type: OperationType,
     val amount: Double,
     val category: String,

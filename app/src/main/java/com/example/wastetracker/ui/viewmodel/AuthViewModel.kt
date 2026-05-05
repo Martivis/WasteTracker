@@ -5,9 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.example.wastetracker.data.remote.dto.LoginRequest
 import com.example.wastetracker.data.remote.dto.RegisterRequest
 import com.example.wastetracker.data.repository.AuthRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 data class AuthUiState(
     val isLoading: Boolean = false,
@@ -15,7 +17,8 @@ data class AuthUiState(
     val error: String? = null
 )
 
-class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
+@HiltViewModel
+class AuthViewModel @Inject constructor(private val repository: AuthRepository) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState = _uiState.asStateFlow()
